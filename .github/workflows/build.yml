@@ -22,15 +22,20 @@ jobs:
 
       - name: Build with qmake
         run: |
-          qmake dashmaster.pro
+          qmake CONFIG+=release dashmaster.pro
           mingw32-make
 
-      - name: Deploy Qt dependencies
-        run: |
-          windeployqt release/*.exe
+      - name: List build output
+        run: dir
 
-      - name: Upload package
+      - name: Find .exe
+        run: dir /s /b *.exe
+
+      - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
-          name: E34dash-package
-          path: release/**
+          name: E34dash-exe
+          path: |
+            release/*.exe
+            debug/*.exe
+            *.exe
