@@ -22,20 +22,31 @@ jobs:
 
       - name: Build with qmake
         run: |
-          qmake CONFIG+=release dashmaster.pro
+          qmake dashmaster.pro
           mingw32-make
 
-      - name: List build output
-        run: dir
+      - name: Find exe path
+        id: find_exe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter *.exe | Where-Object { $_.Name -notmatch "qmake|designer|linguist" } | Select-Object -First 1
+          if (-not $exe) { Write-Error "No exe found!" }
+          echo "EXE_PATH=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "Found exe: $($exe.FullName)"
 
-      - name: Find .exe
-        run: dir /s /b *.exe
+      - name: Deploy Qt dependencies
+        run: |
+          windeployqt "${{ env.EXE_PATH }}"
 
-      - name: Upload exe
+      - name: Package zip
+        run: |
+          $outDir = "$(Split-Path '${{ env.EXE_PATH }}')"
+          $zipPath = "$env:RUNNER_TEMP\E34dash.zip"
+          Compress-Archive -Path "$outDir\*" -DestinationPath $zipPath
+          echo "ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload build zip
         uses: actions/upload-artifact@v4
         with:
-          name: E34dash-exe
-          path: |
-            release/*.exe
-            debug/*.exe
-            *.exe
+          name: E34dash-Windows
+          path: ${{ env.ZIP_PATH }}
