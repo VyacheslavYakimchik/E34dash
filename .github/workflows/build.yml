@@ -25,9 +25,8 @@ jobs:
           qmake dashmaster.pro
           mingw32-make
 
-            - name: Upload exe
+      - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
           name: E34dash-exe
           path: release/*.exe
-
